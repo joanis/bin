@@ -4,6 +4,10 @@
 # Author: Maxime Joanis
 # Created: 2014-09-06
 
+# Implementation notes
+# - Careful with names containing spaces. There are quotes around the md5sum
+#   parameter for this reason.
+
 use strict;
 use warnings;
 
