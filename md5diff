@@ -1,0 +1,83 @@
+#!/usr/bin/env perl
+
+# md5diff: Uses md5sum to compare the content of two directories.
+# Author: Maxime Joanis
+# Created: 2014-09-06
+
+use strict;
+use warnings;
+
+die "ERROR: Requires two arguments (the two directories to compare).\n" unless scalar(@ARGV) == 2;
+my $base_dir0 = $ARGV[0];
+my $base_dir1 = $ARGV[1];
+die "ERROR: First directory doesn't exist.\n" unless (-d $ARGV[0]);
+die "ERROR: Second directory doesn't exist.\n" unless (-d $ARGV[1]);
+
+sub md5 {
+    my $f = $_[0];
+    substr `md5sum "$f"`, 0, 32;
+}
+
+sub compare_dirs {
+    my $dir0 = $_[0];
+    my $dir1 = $_[1];
+    opendir(DIR0, $dir0) || die "ERROR: Unable to open directory: $dir0\n";
+    opendir(DIR1, $dir1) || die "ERROR: Unable to open directory: $dir1\n";
+    my @files0 = readdir(DIR0);
+    my @files1 = readdir(DIR1);
+    closedir(DIR0);
+    closedir(DIR1);
+
+    # filter out '.' and '..' out, and sort
+    @files0 = grep !/^\.\.?$/, @files0;
+    @files1 = grep !/^\.\.?$/, @files1;
+    @files0 = sort @files0;
+    @files1 = sort @files1;
+
+    # while there are files to compare
+    while (scalar(@files0) > 0 && scalar(@files1) > 0) {
+	my $file0 = $files0[0];
+	my $file1 = $files1[0];
+	my $path0 = $dir0 . "/" . $file0;
+	my $path1 = $dir1 . "/" . $file1;
+
+	# if same name and...
+	if ($file0 eq $file1) {
+	    if (-d $path0 && -d $path1) {
+		# ...are directories
+		compare_dirs($path0, $path1);
+	    } elsif (-f $path0 && -f $path1) {
+                # ...are files
+		my $md5_0 = md5($path0);
+		my $md5_1 = md5($path1);
+		if ($md5_0 ne $md5_1) {
+		    print "< $path0\n";
+		    print "> $path1\n";
+		}
+	    } else {
+		# ...are not both same type
+		print "< $path0\n";
+		print "> $path1\n";
+	    }
+
+	    shift @files0;
+	    shift @files1;
+	} elsif ($file0 lt $file1) {
+	    print "< $path0\n";
+	    shift @files0;
+	} else {
+	    print "> $path1\n";
+	    shift @files1;
+	}
+    }
+
+    # consider remaining files as differences
+    foreach my $f (@files0) {
+	print "< $dir0/$f\n";
+    }
+    foreach my $f (@files1) {
+	print "> $dir1/$f\n";
+    }
+}
+
+compare_dirs($base_dir0, $base_dir1)
