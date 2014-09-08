@@ -7,7 +7,7 @@
 #   0xAA to check from an hexadecimal value
 #   enter char or symbol to get indexes
 #
-# Author: Maxime Joanis <@MaximeJ>
+# Author: Maxime Joanis (@MaximeJ)
 # Created: 2014-06-20
 
 ascii_tbl = [ 'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS',

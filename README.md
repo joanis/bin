@@ -13,4 +13,4 @@ Three parameter formats are accepted to get information about a specific charact
 - x: a single ASCII character
 
 #### md5diff
-Directory diff utility. (Perl)
+Directory diff utility. (Perl, md5sum)
