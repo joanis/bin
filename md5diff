@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 # md5diff: Uses md5sum to compare the content of two directories.
-# Author: Maxime Joanis
+# Author: Maxime Joanis (@MaximeJ)
 # Created: 2014-09-06
 
 # Implementation notes

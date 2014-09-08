@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+# ASCII table
+#
+# A single parameter:
+#   0d99 to check from a decimal value
+#   0xAA to check from an hexadecimal value
+#   enter char or symbol to get indexes
+#
+# Author: Maxime Joanis (@MaximeJ)
+# Created: 2014-06-20
+
+ascii_tbl = [ 'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS',
+  'HT', 'LF', 'VT', 'FF', 'CR', 'SO', 'SI', 'DLE', 'DC1', 'DC2', 'DC3', 'DC4',
+  'NAK', 'SYN', 'ETB', 'CAN', 'EM', 'SUB', 'ESC', 'FC', 'GS', 'RS', 'US', 'SP']
+'!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'.chars.each { |c| ascii_tbl << c }
+ascii_tbl << 'DEL'
+
+# If ARGV empty, print table.
+if ARGV.empty?
+  puts "\t" + (0..7).to_a.join("\t")
+  (0..15).each { |i| puts "#{i}\t" + (0..7).map { |j| ascii_tbl[j * 16 + i] }.join("\t") }
+end
+
+# Print details for requested ASCII codes or characters.
+ARGV.each do |a|
+  if ascii_tbl.include? a
+    index = ascii_tbl.index a
+    puts "#{a}:\t#{index}\t0x#{index.to_s(16).upcase}"
+  elsif a.start_with? '0x'
+    index = a.hex
+    puts "#{ascii_tbl[index]}:\t#{index}\t#{a}"
+  elsif a.start_with? '0d'
+    i = a[2..-1].to_i
+    puts "#{ascii_tbl[i]}:\t#{i}\t0x#{i.to_s(16).upcase}"
+  end
+end
