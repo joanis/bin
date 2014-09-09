@@ -1,0 +1,108 @@
+#!/usr/bin/env perl
+
+# Calculates time spent on each task in an org-mode timesheet.
+
+# Author: Maxime Joanis (@MaximeJ)
+# Created: 2012?
+
+use strict;
+use warnings;
+
+# 1. Read the file up to the desired date.
+# 2. Until next "* " line, print date, time spent, task.
+
+# Read desired date:
+print "From date: ";
+my $_ = <>;
+
+my ($year, $month, $day);
+
+if (m/(\d{4})-(\d{2})-(\d{2})/) {
+    $year = $1;
+    $month = $2;
+    $day = $3;
+    #print "Date: " . $year . "-" . $month . "-" . $day;
+} else {
+    die "Wrong date format.";
+}
+
+my $inYear = 0;
+my $inMonth = 0;
+my $inDay = 0;
+
+my $date = $year . "-" . $month . "-" . $day;
+my $totalForDay = 0;
+my $totalGlobal = 0;
+
+open my $timeLog, $ENV{'TIMELOG'};
+
+while (<$timeLog>) {
+    if ($inDay) {
+	# process lines until next "* " line
+	# keep date updated using "** " and "*** " lines
+
+	if (m/^\*\*\*\* /) { # if this is a work entry
+	    processLine($_);
+	    print "\t\t\t\t\ttotal: " . $totalForDay . "\n";
+	} elsif (m/^\*\*\* (\d\d)/) { # if this is a new day
+	    $day = $1;
+	    $totalForDay = 0;
+	    $date = $year . "-" . $month . "-" . $day;
+	    print $date . ":\n";
+	} elsif (m/^\*\* (\d\d)/) { # if this is a new month
+	    $month = $1;
+	} elsif (m/^\* /) { # if this is a new year, or end of entries
+	    last;
+	}
+    } elsif ($inMonth) {
+	# look for day
+	if (m/^\*\*\* (\d\d)/ && $1 eq $day) {
+	    $inDay = 1;
+	}
+	# just found from where to start
+	# exactly at the day specified; can start processing on next line
+    } elsif ($inYear) {
+	# look for month
+	if (m/^\*\* (\d\d)/ && $1 eq $month) {
+	    $inMonth = 1;
+	}
+    } else {
+	# look for year
+	if (m/^\* (\d{4})/ && $1 eq $year) {
+	    $inYear = 1;
+	}
+    }
+}
+
+print "TOTAL: " . $totalGlobal . "\n";
+close $timeLog;
+
+# TODO day total
+# TODO week total
+sub processLine {
+    $_ = $_[0];
+    if (m%^\*\*\*\* (\d\d:\d\d/\d\d:\d\d(,\d\d:\d\d/\d\d:\d\d)*) (.*)%) {
+	my @times = split(/,/, $1);
+	my $desc = $3;
+	print "\t" . timeRangeToAmount(@times) . "\t" . $desc . "\n";
+    }
+}
+
+# Receives an array of string time ranges, returns an amount, in hours.
+sub timeRangeToAmount {
+    my $total = 0;
+    foreach $_ (@_) {
+	m#(\d\d):(\d\d)/(\d\d):(\d\d)#;
+	my $h = $3 - $1;
+	my $m = $4 - $2;
+	if ($m < 0) {
+	    $m += 60;
+	    $h -= 1;
+	}
+	my $partial = $h + $m / 60;
+	$total += $partial;
+    }
+    $totalForDay += $total;
+    $totalGlobal += $total;
+    return $total;
+}

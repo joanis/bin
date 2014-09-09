@@ -17,3 +17,6 @@ Directory diff utility. (Perl, md5sum)
 
 #### svn-hist
 SVN file history retriever. Shows all diffs for a file. Not from me, but still sometimes very handy. (Bash, svn)
+
+#### timesheet
+Calculates time durations from intervals in org-mode (self-designed) timesheet. (Perl)
