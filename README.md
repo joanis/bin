@@ -14,3 +14,6 @@ Three parameter formats are accepted to get information about a specific charact
 
 #### md5diff
 Directory diff utility. (Perl, md5sum)
+
+#### svn-hist
+SVN file history retriever. Shows all diffs for a file. Not from me, but still sometimes very handy. (Bash, svn)
