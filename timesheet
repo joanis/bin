@@ -13,7 +13,13 @@ use warnings;
 
 # Read desired date:
 print "From date: ";
-my $_ = <>;
+my $_;
+if (@ARGV == 0) {
+    $_ = <>;
+} else {
+    $_ = $ARGV[0];
+    print $_ . "\n";
+}
 
 my ($year, $month, $day);
 
