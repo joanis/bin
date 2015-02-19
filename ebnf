@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+puts 'Extended Backus-Naur Form (EBFN)'
+puts
+puts 'SYMBOLS                             PRECEDENCE (highest first)'
+puts '  =      definition                   *  repetition-symbol'
+puts '  ,      concatenation                -  except-symbol'
+puts '  ;      termination                  ,  concatenate-symbol'
+puts '  |      alternation                  |  definition-separator-symbol'
+puts '  [ ]    option                       =  defining-symbol'
+puts '  { }    repetition                   ;  terminator-symbol'
+puts '  ( )    grouping'
+puts '  " "    terminal string'
+puts '  \' \'    terminal string'
+puts '  (* *)  comment'
+puts '  ? ?    special sequence'
+puts '  -      exception'
+puts
+puts 'http://en.wikipedia.org/w/index.php?title=Extended_Backus-Naur_Form'
