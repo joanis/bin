@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Computes line and char statistics from a diff.
+# Works both with a file as argument, or as stream processor.
+# Maxime Joanis
+# 2015-01-14
+
+content=`cat $1`
+added=`echo "$content" | grep "^+"`
+subed=`echo "$content" | grep "^-"`
+
+# Lines
+addL=`echo "$added" | wc -l`
+subL=`echo "$subed" | wc -l`
+netL=$(($addL - $subL))
+
+echo L+$addL
+echo L-$subL
+echo L=$netL
+
+# Chars
+addC=`echo "$added" | wc -c`
+subC=`echo "$subed" | wc -c`
+netC=$(($addC - $subC))
+
+echo C+$addC
+echo C-$subC
+echo C=$netC
