@@ -1,0 +1,159 @@
+#!/usr/bin/env perl
+
+# VCS Update script
+# By default, will check for repository list in ~/.repos
+# Author: Maxime Joanis
+# Created: < 2013-12-21
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use File::HomeDir;
+
+# command-line options
+my $verbose = 0;
+my $silent = 0;
+
+my $homeDir = File::HomeDir->my_home;
+
+GetOptions("v" => \$verbose,
+           "s" => \$silent)
+    or die ("Error in command line arguments\n");
+
+if ($verbose) { print "verbose!\n"; }
+if ($silent) { print "silent!\n"; }
+
+
+# Create list of repositories to update.
+my @repos = selectRepos();
+if ($verbose) {
+    print "Repositories to update:\n";
+    foreach my $rep (@repos) {
+        print "  $rep\n";
+    }
+}
+
+for my $dir (@repos) {
+    print "======== $dir ========\n" unless $silent;
+    my $svncmd = "svn up";
+    my $gitcmd = "git update";
+    $svncmd .= " -q" if $silent;
+    # TODO no print for quiet git?
+    my $type = detectType($dir);
+    if ($type eq 'svn') {
+        my $cmd = "$svncmd $dir";
+        if ($verbose) {
+            print "Executing: $cmd\n";
+        }
+        print `$cmd`;
+    } elsif ($type eq 'git') {
+        my $cmd = "$gitcmd $dir";
+        if ($verbose) {
+            print "Executing: $cmd\n";
+        }
+    } else {
+        print "ERROR: unsupported type $type\n";
+    }
+}
+
+sub selectRepos {
+    my $count = scalar @ARGV;
+    if ($count) {
+        if ($verbose) {
+            print "$count repositories specified as arguments. Ignoring .repos file.\n";
+        }
+        return @ARGV;
+    } else {
+        if ($verbose) {
+            print "No repository specified as argument. Will parse .repos file.\n";
+        }
+        return parseReposFile();
+    }
+}
+
+sub parseReposFile {
+    if ($verbose) {
+        print "Parsing .repos file...\n";
+    }
+
+    my $filePath = "$homeDir/.repos";
+    my @repos;
+
+    if ($verbose) {
+        print "Looking into $filePath\n";
+    }
+
+    open my $reposFile, $filePath
+        or die("Could not open .repos file.\n");
+    while (<$reposFile>) {
+        if (!m/#.*/) {
+            $_ =~ s/\R//; # trim
+
+            if ($verbose) {
+                print "Parsing line: $_\n";
+            }
+
+            my @tokens = split(/ /);
+            $tokens[0] =~ s%~%$homeDir%;
+
+            # case 1: directory
+            # case 2: directory with *
+            # case 3: directory with * and regex
+
+            if ($tokens[0] =~ m/.*\*/) {
+                my $regex = $tokens[1];
+                if ($verbose) {
+                    print "  $tokens[0] is a directory of repositories.\n";
+                    if ($regex) {
+                        print "    Line has a match regex.\n";
+                    }
+                }
+
+                chop($tokens[0]); # remove last and trash it
+                opendir(my $dir, $tokens[0])
+                    or die("Could not access directory $tokens[0].\n");
+                while (my $subdir = readdir($dir)) {
+                    my $fullPath = $tokens[0] . $subdir;
+                    if ($verbose) {
+                        print "Considering $fullPath\n";
+                    }
+                    next unless (-d $fullPath);
+                    next if ($subdir =~ m/\..*/); # skip ., .., and hidden ones
+                    if ($regex) {
+                        next unless ($subdir =~ m/$regex/);
+                    }
+                    if ($verbose) {
+                        print "  Adding $fullPath\n";
+                    }
+                    push(@repos, $fullPath);
+                }
+                closedir($dir);
+            } else {
+                if ($verbose) {
+                    print "  $tokens[0] is a simple repository.\n";
+                }
+                push(@repos, $tokens[0]);
+            }
+        }
+    }
+    return @repos;
+}
+
+# Tells what's the VCS type of a provided folder.
+# 'none' | 'svn' |  ...... more to come
+sub detectType {
+    my ($dir) = @_;
+    my $res = "none";
+    if (-d $dir . "/.svn") {
+        $res = "svn";
+    } elsif (-d $dir . "/.git") {
+        $res = "git";
+    }
+
+    if ($verbose) {
+        print "[$res] $dir\n";
+    }
+
+    return $res;
+}
