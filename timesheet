@@ -40,7 +40,9 @@ my $date = $year . "-" . $month . "-" . $day;
 my $totalForDay = 0;
 my $totalGlobal = 0;
 
-open my $timeLog, $ENV{'TIMELOG'};
+die 'TIMELOG environment variable not set' if !$ENV{'TIMELOG'};
+
+open my $timeLog, "<", $ENV{'TIMELOG'};
 
 while (<$timeLog>) {
     if ($inDay) {
