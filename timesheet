@@ -1,12 +1,60 @@
 #!/usr/bin/env perl
-
+#
 # Calculates time spent on each task in an org-mode timesheet.
-
+#
+# General format of a supported org-mode timesheet (ignore '# ' on each line):
+# * 2016 -- This is the year, the reste of the line is ignored.
+# ** 01 January -- The month has two digits, the rest of the line is ignored.
+# *** 10 Sunday -- The day also has two digits, the rest of the line is ignored.
+# **** 19:00/21:30 Here's a log entry.
+# More details can be added under the entry, will be ignored.
+# There can be multiple entries for a day. No check is made against overlaps.
+#
+# Usage notes:
+# - If an inverval finishes at 1 AM the following day, use 25:00. If it ends the
+#   day after and you don't want to split in daily intervals, use 49:00. Doesn't
+#   matter if it's not a real time. (Won't work over 99 h.)
+#
 # Author: Maxime Joanis (@MaximeJ)
 # Created: 2012?
 
 use strict;
 use warnings;
+use Getopt::Long;
+
+my $modeDenormalize = 0;
+my $verbose = 0;
+my $filename = '';
+GetOptions('denormalize' => \$modeDenormalize,
+           'verbose' => \$verbose);
+#print "denormalize: $modeDenormalize\n";
+
+# if no arg file, use timelog?
+
+if ($verbose) {
+    print "filename: $filename\n";
+    print "ARGV: @ARGV\n";
+}
+
+# Denormalize mode is used on its own. No other args but the input file.
+# Keep only lines with time intervals and add missing info (year, month, day).
+if ($modeDenormalize) {
+    print('denormalize mode') if $verbose;
+    my ($year, $month, $day);
+    while (<STDIN>) {
+        if (m/^\* (\d{4})/) {
+            $year = $1;
+        } elsif (m/^\*\* (\d{2})/) {
+            $month = $1;
+        } elsif (m/^\*\*\* (\d{2})/) {
+            $day = $1;
+        } elsif (m/^\*\*\*\* (.+)/) {
+            # time log entry (probably, would need to verify there's an interval
+            print "$year-$month-$day $1\n";
+        }
+    }
+    exit;
+}
 
 # 1. Read the file up to the desired date.
 # 2. Until next "* " line, print date, time spent, task.
